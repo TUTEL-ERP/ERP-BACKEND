@@ -38,13 +38,16 @@ namespace server.Dto
 
         {
             public string Name { get; set; }
-            public string Description { get; set; } 
-            public decimal OrignalPrice { get; set; }
-            public int StockQuantity { get; set; }
-        
-          
+            public string Description { get; set; }
+        public decimal OrignalPrice { get; set; }
+        public decimal? DiscountPercentage { get; set; }   // badge: -20%
+        public int StockQuantity { get; set; }
+        public double AvearageRating { get; set; }
 
-          public int CategoryId { get; set; }
+        public bool IsFeatured { get; set; }
+
+
+        public int CategoryId { get; set; }
             
         public int BrandId { get; set; }
 

@@ -24,8 +24,6 @@ namespace server.Data
                 optionsBuilder.UseSqlServer(_config.GetConnectionString("DefaultConnection"));
             }
         }
-      
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
@@ -74,6 +72,20 @@ namespace server.Data
         public DbSet<Categories> categories { get; set; }
         public DbSet<ProductReview> productreviews { get; set; }
         public DbSet<Image> image { get; set; }
+
+        public DbSet<WishListItems> WishListItems { get; set; }
+        public DbSet<CartItems> CartItems { get; set; }
+
+
+        public DbSet<WishList> WishLists { get; set; }
+        public DbSet<Cart> Cart { get; set; }
+
+
+        public DbSet<User> User { get; set; }
+
+
+
+
 
 
     }

@@ -10,17 +10,20 @@ namespace server.Entities
         public decimal? DiscountAmount { get; set; }
         public decimal? DiscountPercentage { get; set; }
 
-        public decimal NewPrice { get
-
+        public decimal NewPrice
+        {
+            get
             {
                 if (DiscountPercentage.HasValue && DiscountPercentage.Value > 0)
                 {
-                    return OrignalPrice - DiscountPercentage.Value / 100;
+                    return OrignalPrice - (OrignalPrice * DiscountPercentage.Value / 100);
                 }
+
                 if (DiscountAmount.HasValue && DiscountAmount.Value > 0)
                 {
                     return OrignalPrice - DiscountAmount.Value;
                 }
+
                 return OrignalPrice;
             }
         }

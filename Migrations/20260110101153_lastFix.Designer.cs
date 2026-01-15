@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using server.Data;
 
@@ -11,9 +12,11 @@ using server.Data;
 namespace server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260110101153_lastFix")]
+    partial class lastFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,24 +24,6 @@ namespace server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("WishList", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("WishLists");
-                });
 
             modelBuilder.Entity("server.Entities.Brand", b =>
                 {
@@ -80,47 +65,6 @@ namespace server.Migrations
                         .HasFilter("[ImageId] IS NOT NULL");
 
                     b.ToTable("Brand");
-                });
-
-            modelBuilder.Entity("server.Entities.Cart", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Cart");
-                });
-
-            modelBuilder.Entity("server.Entities.CartItems", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CartId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CartId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("server.Entities.Categories", b =>
@@ -365,6 +309,24 @@ namespace server.Migrations
                     b.ToTable("User");
                 });
 
+            modelBuilder.Entity("server.Entities.WishList", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WishLists");
+                });
+
             modelBuilder.Entity("server.Entities.WishListItems", b =>
                 {
                     b.Property<int>("Id")
@@ -388,17 +350,6 @@ namespace server.Migrations
                     b.ToTable("WishListItems");
                 });
 
-            modelBuilder.Entity("WishList", b =>
-                {
-                    b.HasOne("server.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("server.Entities.Brand", b =>
                 {
                     b.HasOne("server.Entities.Image", "Image")
@@ -407,36 +358,6 @@ namespace server.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Image");
-                });
-
-            modelBuilder.Entity("server.Entities.Cart", b =>
-                {
-                    b.HasOne("server.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("server.Entities.CartItems", b =>
-                {
-                    b.HasOne("server.Entities.Cart", "Cart")
-                        .WithMany("CartItems")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("server.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Cart");
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("server.Entities.Categories", b =>
@@ -486,6 +407,17 @@ namespace server.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("server.Entities.WishList", b =>
+                {
+                    b.HasOne("server.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("server.Entities.WishListItems", b =>
                 {
                     b.HasOne("server.Entities.Product", "Product")
@@ -494,7 +426,7 @@ namespace server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WishList", "WishList")
+                    b.HasOne("server.Entities.WishList", "WishList")
                         .WithMany("WishListItems")
                         .HasForeignKey("WishListId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -503,16 +435,6 @@ namespace server.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("WishList");
-                });
-
-            modelBuilder.Entity("WishList", b =>
-                {
-                    b.Navigation("WishListItems");
-                });
-
-            modelBuilder.Entity("server.Entities.Cart", b =>
-                {
-                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("server.Entities.Image", b =>
@@ -530,6 +452,11 @@ namespace server.Migrations
             modelBuilder.Entity("server.Entities.Product", b =>
                 {
                     b.Navigation("ProductReviews");
+                });
+
+            modelBuilder.Entity("server.Entities.WishList", b =>
+                {
+                    b.Navigation("WishListItems");
                 });
 #pragma warning restore 612, 618
         }

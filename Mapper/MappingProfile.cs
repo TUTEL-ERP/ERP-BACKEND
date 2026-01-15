@@ -20,6 +20,8 @@ namespace server.Mapper
             CreateMap<Product, ProductResDto>();
             CreateMap<Brand, BrandResDto>();
             CreateMap<Categories, CategoryResDto>();
+            CreateMap<WishListItems, WishListitemResDto>();
+
         }
     }
 }

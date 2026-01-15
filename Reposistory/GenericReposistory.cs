@@ -8,12 +8,12 @@ namespace server.Repository
 {
     public class GenericRepository<T> : IGenericReposistroy<T> where T : class
     {
-        private readonly DataContext _context;
-        private readonly DbSet<T> _dbSet;
+        protected readonly DataContext _context;
+        protected readonly DbSet<T> _dbSet;
 
-        public GenericRepository(DataContext context)
+        public GenericRepository(DataContext context) // use your actual DbContext
         {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             _dbSet = _context.Set<T>();
         }
 

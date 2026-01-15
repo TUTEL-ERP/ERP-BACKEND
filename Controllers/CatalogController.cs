@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using server.Dto;
 using server.Entities;
@@ -24,6 +25,7 @@ namespace server.Controllers
         // =====================================================================
 
         [HttpPost("product/getall")]
+        [Authorize(Roles = "USER,ADMIN")]
         public async Task<ActionResult<ResponceDto>> GetAllProducts([FromBody] CatalogSpec req)
         {
             var response = new ResponceDto();
@@ -44,6 +46,7 @@ namespace server.Controllers
         }
 
         [HttpPost("product/create")]
+        [Authorize(Roles = "ADMIN")]
         [Consumes("multipart/form-data")]
 
         public async Task<ActionResult> CreateProduct([FromForm] CreateProductReq req)
@@ -52,10 +55,9 @@ namespace server.Controllers
             return Ok(product);
         }
 
-     
-
-
         [HttpDelete("product/delete/{productId}")]
+        [Authorize(Roles = "ADMIN")]
+
         public async Task<ActionResult> DeleteProduct(int productId)
         {
             await catalogService.DeleteProduct(productId);
@@ -67,6 +69,8 @@ namespace server.Controllers
         // =====================================================================
 
         [HttpGet("brand/getall")]
+        [Authorize(Roles = "USER,ADMIN")]
+
         public async Task<ActionResult<ResponceDto>> GetAllBrands()
         {
             var response = new ResponceDto();
@@ -79,6 +83,7 @@ namespace server.Controllers
 
         [HttpPost("brand/create")]
         [Consumes("multipart/form-data")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult> CreateBrand([FromForm] CreateBrandReq req)
         {
             if (!ModelState.IsValid)
@@ -91,6 +96,7 @@ namespace server.Controllers
             
     
         [HttpDelete("brand/delete/{brandId}")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult> DeleteBrand(int brandId)
         {
             await catalogService.DeleteBrand(brandId);
@@ -102,6 +108,8 @@ namespace server.Controllers
         // =====================================================================
 
         [HttpGet("category/getall")]
+        [Authorize(Roles = "ADMIN,USER")]
+
         public async Task<ActionResult<ResponceDto>> GetAllCategories()
         {
             var response = new ResponceDto();
@@ -114,6 +122,8 @@ namespace server.Controllers
 
         [HttpPost("category/create")]   
         [Consumes("multipart/form-data")]
+        [Authorize(Roles = "ADMIN")]
+
         public async Task<ActionResult> CreateCategory([FromForm] CreateCategoryReq req)
         {
 
@@ -127,6 +137,8 @@ namespace server.Controllers
 
 
         [HttpDelete("category/delete/{categoryId}")]
+        [Authorize(Roles = "ADMIN")]
+
         public async Task<ActionResult> DeleteCategory(int categoryId)
         {
             await catalogService.DeleteCategory(categoryId);
