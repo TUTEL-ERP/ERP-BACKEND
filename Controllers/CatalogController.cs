@@ -20,10 +20,7 @@ namespace server.Controllers
             this.mapper = mapper;
         }
 
-        // =====================================================================
-        // 🔵 PRODUCT SECTION
-        // =====================================================================
-
+     
         [HttpPost("product/getall")]
         [Authorize(Roles = "USER,ADMIN")]
         public async Task<ActionResult<ResponceDto>> GetAllProducts([FromBody] CatalogSpec req)
@@ -44,6 +41,20 @@ namespace server.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("product/{id}")]
+        [Authorize(Roles = "USER,ADMIN")]
+        public async Task<ActionResult<ResponceDto>> GetProductById(int id)
+        {
+            var response = new ResponceDto();
+
+            var product = await catalogService.GetProductById(id);
+
+            response.Data = mapper.Map<ProductResDto>(product);
+
+            return Ok(response);
+        }
+
 
         [HttpPost("product/create")]
         [Authorize(Roles = "ADMIN")]

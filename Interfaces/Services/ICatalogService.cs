@@ -7,6 +7,8 @@ namespace server.Interfaces.Services
     {
         // Product
         Task<ProductPagination> GetAllProducts(CatalogSpec inData);
+        Task<Product> GetProductById(int productId);
+
 
         Task<Product> CreateProduct(CreateProductReq inData);
         Task DeleteProduct(int productId);

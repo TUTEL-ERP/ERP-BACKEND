@@ -87,6 +87,17 @@ namespace server.Services
             return await productRepository.AddAsync(newProduct);
         }
 
+
+        public async Task<Product> GetProductById(int productId)
+        {
+            var product = await productRepository.GetByIdIncludingChildEntities(productId);
+
+            if (product == null)
+                throw new ArgumentNullException($"Invalid Product Id {productId}");
+
+            return product;
+        }
+
         public async Task DeleteBrand(int brandId)
         {
             Brand? brand = await brandReposistory.GetByIdAsync(brandId);

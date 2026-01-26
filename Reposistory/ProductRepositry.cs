@@ -16,6 +16,14 @@ namespace server.Reposistory
         {
             this.context = context;
         }
+        public async Task<Product?> GetByIdIncludingChildEntities(int id)
+        {
+            return await context.Products
+                .Include(x => x.Brand)
+                .Include(x => x.Categories)
+                .Include(x => x.Thumbnail)
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
 
         public async Task<ProductPagination> GetAllIncludingChildEntites(CatalogSpec inData)
         {
@@ -111,4 +119,5 @@ namespace server.Reposistory
 
         }
     }
+
 }

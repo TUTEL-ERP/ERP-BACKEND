@@ -41,35 +41,24 @@ namespace server.Services
             if (file == null || file.Length == 0)
                 throw new ArgumentNullException(nameof(file), "file is empty");
 
-            // Use ContentRootPath or WebRootPath consistently.
-            // If you want to serve from Uploads at project root:
             var uploadsPath = Path.Combine(_environment.ContentRootPath, "Uploads");
-
-            // If you prefer wwwroot/uploads, use:
-            // var uploadsPath = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads");
-
             if (!Directory.Exists(uploadsPath))
                 Directory.CreateDirectory(uploadsPath);
-
-            var originalFileName = Path.GetFileName(file.FileName);      // e.g. "product-5.jpg"
-            var extension = Path.GetExtension(originalFileName) ?? "";    // e.g. ".jpg"
-            var savedFileName = $"{Guid.NewGuid()}{extension}";          // e.g. "3c59... .jpg"
+            var originalFileName = Path.GetFileName(file.FileName);      
+            var extension = Path.GetExtension(originalFileName) ?? "";   
+            var savedFileName = $"{Guid.NewGuid()}{extension}";         
             var savedFilePath = Path.Combine(uploadsPath, savedFileName);
-
             await using (var stream = new FileStream(savedFilePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
-
             var image = new Image
             {
                 ImageUrl = savedFileName,          
                 ImageName = originalFileName,
                 ImageExtension = extension.TrimStart('.') 
             };
-
             await _imageReposistory.AddAsync(image); 
-
             return image;
         }
     }
