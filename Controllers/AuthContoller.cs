@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// AuthController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using server.Dto;
-using server.Entities;
-using server.Enums;
-using server.Helpers;
-using server.Interfaces.Repository;
-using server.Reposistory;
-using System.IdentityModel.Tokens.Jwt;
+using server.Interfaces.Services;
 using System.Security.Claims;
 
 namespace server.Controllers
@@ -15,265 +11,104 @@ namespace server.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserReposistory _userRepository;
-        private readonly IJwtHelper _helper;
+        private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IUserReposistory userRepository, IJwtHelper helper)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
-            _userRepository = userRepository;
-            _helper = helper;
+            _authService = authService;
+            _logger = logger;
         }
-
-        //[HttpPost("login")]
-        //public async Task<IActionResult> Login([FromBody] LoginUserReqDto req)
-        //{
-        //    ResponceDto res = new ResponceDto();
-        //    // Get user by email
-        //    User? user = await _userRepository.GetUserByEmail(req.Email);
-        //    if (user == null)
-        //    {
-        //        res.IsSuccessed = false;
-        //        res.Message = "User not found";
-        //        return BadRequest(res);
-        //    }
-
-        //    // Use EnhancedVerify because we stored password using EnhancedHashPassword
-        //    if (!BCrypt.Net.BCrypt.EnhancedVerify(req.Password, user.Password))
-        //    {
-        //        res.IsSuccessed = false;
-        //        res.Message = "Invalid password";
-        //        return BadRequest(res);
-        //    }
-
-        //    var RefreshToken = _helper.GenerateRefreshToken();
-        //    user.RefreshToken = RefreshToken;
-        //    user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
-
-        //    await _userRepository.UpdateUser(user);
-        //    // Generate JWT token
-        //    LoginUserResDto userDetail = new LoginUserResDto
-        //    {
-        //        AccessToken = _helper.GenerateJwtToken(user),
-        //        RefreshToken = RefreshToken
-        //    };
-
-        //    res.IsSuccessed = true;
-        //    res.Message = "Login successful";
-        //    res.Data = userDetail;
-
-        //    return Ok(res);
-        //}
-
-
-
 
         [HttpPost("login")]
-public async Task<IActionResult> Login([FromBody] LoginUserReqDto req)
-{
-    try
-    {
-        ResponceDto res = new ResponceDto();
-
-        User? user = await _userRepository.GetUserByEmail(req.Email);
-        if (user == null)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            res.IsSuccessed = false;
-            res.Message = "User not found";
-            return BadRequest(res);
+            try
+            {
+                var response = await _authService.LoginAsync(request);
+                return Ok(new { responseCode = 0, message = "Login successful", data = response });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { responseCode = 401, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Login error");
+                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+            }
         }
-
-        if (!BCrypt.Net.BCrypt.EnhancedVerify(req.Password, user.Password))
-        {
-            res.IsSuccessed = false;
-            res.Message = "Invalid password";
-            return BadRequest(res);
-        }
-
-        var RefreshToken = _helper.GenerateRefreshToken();
-        user.RefreshToken = RefreshToken;
-        user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
-
-        await _userRepository.UpdateUser(user);
-
-        LoginUserResDto userDetail = new LoginUserResDto
-        {
-            AccessToken = _helper.GenerateJwtToken(user),
-            RefreshToken = RefreshToken,
-            Username = user.Username,
-            UserId = user.UserId,
-            Role = user.Role
-        };
-
-        res.IsSuccessed = true;
-        res.Message = "Login successful";
-        res.Data = userDetail;
-
-        return Ok(res);
-    }
-    catch(Exception ex)
-    {
-        return StatusCode(500, new { message = ex.Message, stack = ex.StackTrace });
-    }
-}
-
-
-
-
 
         [HttpPost("register")]
-        public async Task<ActionResult<ResponceDto>> Register([FromBody] RegisterUserDto req)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            ResponceDto res = new ResponceDto();
-
-            // Check if email already exists
-            User? user = await _userRepository.GetUserByEmail(req.Email);
-            if (user != null)
+            try
             {
-                res.IsSuccessed = false;
-                res.Message = $"User with email {req.Email} already exists";
-                return BadRequest(res);
+                var response = await _authService.RegisterAsync(request);
+                return Ok(new { responseCode = 0, message = "Registration successful", data = response });
             }
-
-            // Create new user with EnhancedHashPassword
-            User newUser = new User
+            catch (InvalidOperationException ex)
             {
-                Username = req.UserName,
-                Email = req.Email,
-                Password = BCrypt.Net.BCrypt.EnhancedHashPassword(req.Password),
-                Role = UserRole.USER.ToString()
-            };
-
-            bool result = await _userRepository.AddUser(newUser);
-            if (!result)
-            {
-                res.IsSuccessed = false;
-                res.Message = "User registration failed";
-                return BadRequest(res);
+                return Conflict(new { responseCode = 409, message = ex.Message });
             }
-
-            res.IsSuccessed = true;
-            res.Message = "User registered successfully";
-            return Ok(res);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Registration error");
+                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+            }
         }
-
-
-
-        [HttpPost("register-Admin")]
-        public async Task<ActionResult<ResponceDto>> RegisterAdmin([FromBody] RegisterUserDto req)
-        {
-            ResponceDto res = new ResponceDto();
-
-            // Check if email already exists
-            User? user = await _userRepository.GetUserByEmail(req.Email);
-            if (user != null)
-            {
-                res.IsSuccessed = false;
-                res.Message = $"User with email {req.Email} already exists";
-                return BadRequest(res);
-            }
-
-            User newUser = new User
-            {
-                Username = req.UserName,
-                Email = req.Email,
-                Password = BCrypt.Net.BCrypt.EnhancedHashPassword(req.Password),
-                Role = UserRole.ADMIN.ToString()
-            };
-
-            bool result = await _userRepository.AddUser(newUser);
-            if (!result)
-            {
-                res.IsSuccessed = false;
-                res.Message = "User registration failed";
-                return BadRequest(res);
-            }
-
-            res.IsSuccessed = true;
-            res.Message = "User registered successfully";
-            return Ok(res);
-        }
-
-
-
-
 
         [HttpPost("refresh-token")]
-        public async Task<ActionResult<ResponceDto>> RefreshToken([FromBody] TokenRefreshRequest req)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            ResponceDto res = new ResponceDto();
-
-            if (req.RefreshToken == null || req.AccessToken == null)
+            try
             {
-                res.IsSuccessed = false;
-                res.Message = "Invalid Request";
-                return BadRequest(res);
+                var response = await _authService.RefreshTokenAsync(request);
+                return Ok(new { responseCode = 0, message = "Token refreshed successfully", data = response });
             }
-
-            var refreshToken = req.RefreshToken;
-            var accessToken = req.AccessToken;
-
-            var principal = _helper.GetPrincipalFromExpiredToken(accessToken);
-            var email = principal.Identity.Name;
-
-            User user = await this._userRepository.GetUserByEmail(email);
-            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime < DateTime.Now)
+            catch (UnauthorizedAccessException ex)
             {
-                res.IsSuccessed = false;
-                res.Message = "Invalid Request";
-                return BadRequest(res);
+                return Unauthorized(new { responseCode = 401, message = ex.Message });
             }
-
-            // Generate new tokens
-            refreshToken = _helper.GenerateRefreshToken();
-            accessToken = _helper.GenerateJwtToken(user);
-
-            // Update user refresh token info
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(2);
-
-            await _userRepository.UpdateUser(user);
-
-            // Prepare response DTO
-            TokenRefreshRequest data = new TokenRefreshRequest()
+            catch (Exception ex)
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
-            };
-
-            res.Data = data;
-
-            return Ok(res);
-
-
+                _logger.LogError(ex, "Refresh token error");
+                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+            }
         }
 
-        [HttpPost]
         [Authorize]
-        [Route("revoke")]
-        public async Task<IActionResult> Revoke()
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
         {
-            ResponceDto res = new ResponceDto();
-
-            var email = User.FindFirst(ClaimTypes.Name)?.Value;
-
-            var user = await this._userRepository.GetUserByEmail(email);
-
-            if (user == null)
+            try
             {
-                res.IsSuccessed = false;
-                res.Message = "Invalid Request";
-                return BadRequest(res);
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                await _authService.LogoutAsync(userId);
+                return Ok(new { responseCode = 0, message = "Logged out successfully" });
             }
-
-            // Revoke refresh token
-            user.RefreshToken = "";
-            await this._userRepository.UpdateUser(user);
-            res.IsSuccessed = true;
-            res.Message = "User successfully logout";
-            return Ok(res);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Logout error");
+                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+            }
         }
 
-
-
+        [Authorize]
+        [HttpPost("revoke-all")]
+        public async Task<IActionResult> RevokeAllTokens()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                await _authService.RevokeAllTokensAsync(userId);
+                return Ok(new { responseCode = 0, message = "All tokens revoked successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Revoke tokens error");
+                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+            }
+        }
     }
 }

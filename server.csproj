@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<!-- Core Packages -->
+		<PackageReference Include="Dapper" Version="2.1.79" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 
 		<!-- EF Core 8 Packages -->
@@ -15,6 +16,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
 			<PrivateAssets>all</PrivateAssets>
@@ -22,6 +24,7 @@
 
 		<!-- Identity & JWT -->
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.5.0" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.200" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.5.0" />
 
 		<!-- Helpers & Others -->
@@ -29,6 +32,10 @@
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Middleware\" />
 	</ItemGroup>
 
 </Project>

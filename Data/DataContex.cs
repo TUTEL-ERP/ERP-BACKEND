@@ -1,92 +1,65 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using server.Entities; 
-namespace server.Data
-{
-    public class DataContext : DbContext
-    {
-        private readonly IConfiguration _config;
+using server.Enity;
 
-        public DataContext(DbContextOptions<DataContext> options, IConfiguration config)
+namespace ERP_API.Data
+{
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-            _config = config;
         }
 
-        public DbSet<Brand> Brands { get; set; }
-        public DbSet<Categories> Categories { get; set; }
-        public DbSet<Product> Products { get; set; }
-        public DbSet<ProductReview> ProductReviews { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Menu> Menus { get; set; }  // Added Menu DbSet
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseSqlServer(_config.GetConnectionString("DefaultConnection"));
-            }
-        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Product>(entity =>
+            // Unique constraints for User
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            // Relationships for RefreshToken
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Menu Configuration
+            modelBuilder.Entity<Menu>(entity =>
             {
-                entity.Property(p => p.OrignalPrice)
-               .HasPrecision(18, 2);
+                entity.HasKey(e => e.MenuId);
 
-                entity.Property(p => p.DiscountPercentage)
-                .HasColumnType("decimal(5,2)")
-                 .IsRequired(false);
+                entity.Property(e => e.MenuName)
+                    .IsRequired()
+                    .HasMaxLength(100);
 
-                entity.Property(p => p.DiscountAmount)
-                .HasColumnType("decimal(18,2)")
-                 .IsRequired(false);
+                entity.Property(e => e.Icon)
+                    .HasMaxLength(50);
 
-            }
-       );
-      
+                entity.Property(e => e.Route)
+                    .HasMaxLength(200);
 
+                // Self-referencing relationship for parent-child menu hierarchy
+                entity.HasOne(e => e.ParentMenu)
+                    .WithMany(e => e.Children)
+                    .HasForeignKey(e => e.ParentMenuId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Thumbnail)
-                .WithOne(i => i.Product)
-                .HasForeignKey<Product>(p => p.ThumbnailId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<Categories>()
-                .HasOne(p => p.Image)
-                .WithOne(i => i.Category)
-                .HasForeignKey<Categories>(c => c.ImageId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<Brand>()
-     .HasOne(b => b.Image)       
-     .WithOne(i => i.Brand)      
-     .HasForeignKey<Brand>(b => b.ImageId)  
-     .OnDelete(DeleteBehavior.SetNull);
-
-
-            base.OnModelCreating(modelBuilder); 
-
+                // Indexes for better performance
+                entity.HasIndex(e => e.ParentMenuId);
+                entity.HasIndex(e => e.DisplayOrder);
+                entity.HasIndex(e => e.IsActive);
+            });
         }
-        public DbSet<Product> product { get; set; }
-        public DbSet<Brand> brand { get; set; }
-        public DbSet<Categories> categories { get; set; }
-        public DbSet<ProductReview> productreviews { get; set; }
-        public DbSet<Image> image { get; set; }
-
-        public DbSet<WishListItems> WishListItems { get; set; }
-        public DbSet<CartItems> CartItems { get; set; }
-
-
-        public DbSet<WishList> WishLists { get; set; }
-        public DbSet<Cart> Cart { get; set; }
-
-
-        public DbSet<User> User { get; set; }
-
-
-
-
-
-
     }
 }
