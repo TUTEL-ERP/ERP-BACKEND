@@ -62,10 +62,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+builder.Services.AddScoped<IProvinceRepository, ProvinceRepository>();
 
 // Register Services - ✅ ALL REGISTERED
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<IProvinceService, ProvinceService>();
 builder.Services.AddScoped<ICountryService, CountryService>();
 builder.Services.AddScoped<IJwtService, JwtService>(); // ✅ UNCOMMENTED
 
