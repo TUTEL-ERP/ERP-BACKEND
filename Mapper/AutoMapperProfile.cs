@@ -2,16 +2,16 @@
 using server.Dto;
 using server.Enity;
 
-namespace server.Mapper
+namespace server.Mappings
 {
-    public class AutoMapperProfile : Profile
+    public class MappingProfile : Profile
     {
-        public AutoMapperProfile()
+        public MappingProfile()
         {
-            CreateMap<RegisterRequest, User>()
-                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
-
-            CreateMap<User, UserDto>();
+            CreateMap<User, UserDto>().ReverseMap();
+            CreateMap<RegisterRequest, User>();
+            CreateMap<Country, CountryDto>().ReverseMap();
+            CreateMap<CountryRequestDto, Country>();
         }
     }
 }

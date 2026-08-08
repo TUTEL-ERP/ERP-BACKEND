@@ -1,48 +1,43 @@
-﻿using ERP_API.Data;
+﻿// Repository/RefreshTokenRepository.cs
+using ERP_API.Data;
 using Microsoft.EntityFrameworkCore;
+using server.Data;
 using server.Enity;
 using server.Interfaces.Repository;
 
-namespace server.Repositroy
+namespace server.Repository
 {
-    public class RefreshTokenRepository : IRefreshTokenRepository
+    public class RefreshTokenRepository : GenericRepository<RefreshToken>, IRefreshTokenRepository
     {
         private readonly ApplicationDbContext _context;
 
-        public RefreshTokenRepository(ApplicationDbContext context)
+        public RefreshTokenRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
 
-        public async Task<RefreshToken> GetByTokenAsync(string token)
+        public async Task<RefreshToken?> GetByTokenAsync(string token)
         {
-            return await _context.RefreshTokens
+            return await _dbSet
                 .Include(rt => rt.User)
                 .FirstOrDefaultAsync(rt => rt.Token == token && !rt.IsRevoked);
         }
 
-        public async Task<RefreshToken> CreateAsync(RefreshToken refreshToken)
-        {
-            await _context.RefreshTokens.AddAsync(refreshToken);
-            await _context.SaveChangesAsync();
-            return refreshToken;
-        }
-
         public async Task RevokeTokenAsync(string token)
         {
-            var refreshToken = await _context.RefreshTokens
+            var refreshToken = await _dbSet
                 .FirstOrDefaultAsync(rt => rt.Token == token);
 
             if (refreshToken != null)
             {
                 refreshToken.IsRevoked = true;
-                await _context.SaveChangesAsync();
+                await SaveChangesAsync();
             }
         }
 
         public async Task RevokeAllUserTokensAsync(int userId)
         {
-            var tokens = await _context.RefreshTokens
+            var tokens = await _dbSet
                 .Where(rt => rt.UserId == userId && !rt.IsRevoked)
                 .ToListAsync();
 
@@ -51,12 +46,12 @@ namespace server.Repositroy
                 token.IsRevoked = true;
             }
 
-            await _context.SaveChangesAsync();
+            await SaveChangesAsync();
         }
 
         public async Task<bool> ValidateTokenAsync(string token)
         {
-            var refreshToken = await _context.RefreshTokens
+            var refreshToken = await _dbSet
                 .FirstOrDefaultAsync(rt => rt.Token == token &&
                                          !rt.IsRevoked &&
                                          rt.ExpiryDate > DateTime.UtcNow);
@@ -66,17 +61,24 @@ namespace server.Repositroy
 
         public async Task<int> DeleteExpiredTokensAsync()
         {
-            var expiredTokens = await _context.RefreshTokens
+            var expiredTokens = await _dbSet
                 .Where(rt => rt.ExpiryDate <= DateTime.UtcNow || rt.IsRevoked)
                 .ToListAsync();
 
             if (expiredTokens.Any())
             {
-                _context.RefreshTokens.RemoveRange(expiredTokens);
-                await _context.SaveChangesAsync();
+                _dbSet.RemoveRange(expiredTokens);
+                await SaveChangesAsync();
             }
 
             return expiredTokens.Count;
+        }
+
+        public async Task<RefreshToken> CreateAsync(RefreshToken refreshToken)
+        {
+            await _dbSet.AddAsync(refreshToken);
+            await SaveChangesAsync();
+            return refreshToken;
         }
     }
 }

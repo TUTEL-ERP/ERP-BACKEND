@@ -6,13 +6,18 @@ using Microsoft.OpenApi.Models;
 using server.Interfaces.Repository;
 using server.Interfaces.Services;
 using server.Repository;
-using server.Repositroy;
 using server.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Add services
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -43,21 +48,31 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    // Optional: Add logging for SQL queries
+    // options.LogTo(Console.WriteLine, LogLevel.Information);
 });
 
-builder.Services.AddAutoMapper(typeof(Program));
-
+// Register Repositories
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IMenuRepository, MenuRepository>();
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 
-builder.Services.AddScoped<IJwtService, JwtService>();
+// Register Services - ✅ ALL REGISTERED
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<ICountryService, CountryService>();
+builder.Services.AddScoped<IJwtService, JwtService>(); // ✅ UNCOMMENTED
 
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
+
+// JWT Configuration
 var jwtSecret = builder.Configuration["Jwt:Secret"];
 if (string.IsNullOrEmpty(jwtSecret))
 {
@@ -97,12 +112,44 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// ✅ Add Global Exception Handling
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+        {
+            responseCode = 500,
+            message = ex.Message,
+            // Remove in production
+            stackTrace = ex.StackTrace
+        }));
+    }
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.EnsureCreated(); // Or use Migrate() for migrations
+}
+
 app.Run();

@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿// Services/AuthService.cs
+using AutoMapper;
 using server.Dto;
 using server.Enity;
 using server.Interfaces.Repository;
@@ -61,7 +62,8 @@ namespace server.Services
             user.CreatedAt = DateTime.UtcNow;
             user.IsActive = true;
 
-            var createdUser = await _userRepository.CreateAsync(user);
+            // Use AddAsync from GenericRepository (changed from CreateAsync)
+            var createdUser = await _userRepository.AddAsync(user);
 
             return await GenerateAuthResponse(createdUser);
         }
@@ -133,7 +135,8 @@ namespace server.Services
                 IsRevoked = false
             };
 
-            await _refreshTokenRepository.CreateAsync(refreshTokenEntity);
+            // Use AddAsync from GenericRepository (changed from CreateAsync)
+            await _refreshTokenRepository.AddAsync(refreshTokenEntity);
 
             // Update user with refresh token
             user.RefreshToken = refreshToken;

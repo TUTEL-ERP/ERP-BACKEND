@@ -12,7 +12,8 @@ namespace ERP_API.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-        public DbSet<Menu> Menus { get; set; }  // Added Menu DbSet
+        public DbSet<Menu> Menus { get; set; }
+        public DbSet<Country> Countries { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,38 @@ namespace ERP_API.Data
                 entity.HasIndex(e => e.ParentMenuId);
                 entity.HasIndex(e => e.DisplayOrder);
                 entity.HasIndex(e => e.IsActive);
+            });
+
+            modelBuilder.Entity<Country>(entity =>
+            {
+                entity.HasKey(e => e.CountryId);
+
+                entity.Property(e => e.CountryName)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.CountryCode)
+                    .IsRequired()
+                    .HasMaxLength(10);
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.CreatedDate)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                // Unique constraints
+                entity.HasIndex(e => e.CountryName)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Country_Name");
+
+                entity.HasIndex(e => e.CountryCode)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Country_Code");
+
+                // Index for performance
+                entity.HasIndex(e => e.IsActive)
+                    .HasDatabaseName("IX_Country_IsActive");
             });
         }
     }

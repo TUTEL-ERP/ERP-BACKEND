@@ -1,11 +1,11 @@
-﻿using server.Enity;
+﻿// Interfaces/Repository/IRefreshTokenRepository.cs
+using server.Enity;
 
 namespace server.Interfaces.Repository
 {
-    public interface IRefreshTokenRepository
+    public interface IRefreshTokenRepository : IGenericRepository<RefreshToken>
     {
-        Task<RefreshToken> GetByTokenAsync(string token);
-        Task<RefreshToken> CreateAsync(RefreshToken refreshToken);
+        Task<RefreshToken?> GetByTokenAsync(string token);
         Task RevokeTokenAsync(string token);
         Task RevokeAllUserTokensAsync(int userId);
         Task<bool> ValidateTokenAsync(string token);

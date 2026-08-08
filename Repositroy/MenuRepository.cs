@@ -1,17 +1,18 @@
 ﻿// Repository/MenuRepository.cs
 using ERP_API.Data;
 using Microsoft.EntityFrameworkCore;
+using server.Data;
 using server.Dto;
 using server.Enity;
 using server.Interfaces.Repository;
 
 namespace server.Repository
 {
-    public class MenuRepository : IMenuRepository
+    public class MenuRepository : GenericRepository<Menu>, IMenuRepository
     {
         private readonly ApplicationDbContext _context;
 
-        public MenuRepository(ApplicationDbContext context)
+        public MenuRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
@@ -19,7 +20,7 @@ namespace server.Repository
         public async Task<List<MenuDto>> GetMenuHierarchyAsync()
         {
             // Get all active menus ordered by DisplayOrder
-            var menus = await _context.Menus
+            var menus = await _dbSet
                 .Where(m => m.IsActive)
                 .OrderBy(m => m.DisplayOrder)
                 .ToListAsync();
@@ -38,8 +39,8 @@ namespace server.Repository
                 Expanded = false
             }).ToList();
 
+            // Build hierarchy
             var menuDict = menuDtos.ToDictionary(m => m.MenuId);
-
             var rootMenus = new List<MenuDto>();
 
             foreach (var menu in menuDtos)
@@ -51,12 +52,27 @@ namespace server.Repository
                 }
                 else
                 {
-                    // This is a root menu
                     rootMenus.Add(menu);
                 }
             }
 
             return rootMenus;
+        }
+
+        public async Task<List<Menu>> GetActiveMenusAsync()
+        {
+            return await _dbSet
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
+        }
+
+        public async Task<List<Menu>> GetMenusByParentIdAsync(int? parentId)
+        {
+            return await _dbSet
+                .Where(m => m.ParentMenuId == parentId && m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
         }
     }
 }
