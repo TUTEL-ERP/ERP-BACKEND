@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using server.Dto;
-using server.Interfaces.Repository;
-using server.Enums;
+using server.Helpers;  // ✅ Added for DataTableHelper
+using server.Interfaces.Services;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace server.Controllers
 {
@@ -11,143 +13,176 @@ namespace server.Controllers
     [Authorize]
     public class CountryController : ControllerBase
     {
-        private readonly ICountryRepository _countryRepository;
+        private readonly ICountryService _countryService;
         private readonly ILogger<CountryController> _logger;
 
-        public CountryController(ICountryRepository countryRepository, ILogger<CountryController> logger)
+        public CountryController(ICountryService countryService, ILogger<CountryController> logger)
         {
-            _countryRepository = countryRepository;
+            _countryService = countryService;
             _logger = logger;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        private string GetUserId()
+        {
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+
+        // ─── GRID DATA ──────────────────────────────────────────────────────
+        [HttpGet("grid/{formName}")]
+        public async Task<IActionResult> GetGridData(string formName)
         {
             try
             {
-                var countries = await _countryRepository.GetAllCountriesAsync();
-                return Ok(new { responseCode = 0, data = countries });
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid))
+                    return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new CountryRequestDto
+                {
+                    formId = formName,
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                var dataTable = await _countryService.GetGridDataAsync(userid, request);
+
+                // ✅ FIX: Convert DataTable to List<dynamic>
+                var cleanData = dataTable.ToDynamicList();
+
+                return Ok(ApiResponseHelper.Sucess(cleanData, "Data retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting all countries");
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+                _logger.LogError(ex, "Error getting grid data");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // ─── SINGLE RECORD ──────────────────────────────────────────────────
+        [HttpGet("record/{id}")]
+        public async Task<IActionResult> SelectRecord(int id)
         {
             try
             {
-                var country = await _countryRepository.GetCountryByIdAsync(id);
-                if (country == null)
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid))
+                    return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new CountryRequestDto
                 {
-                    return NotFound(new { responseCode = 404, message = "Country not found" });
-                }
-                return Ok(new { responseCode = 0, data = country });
+                    recordId = id.ToString(),
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                var dataTable = await _countryService.SelectRecordAsync(userid, request);
+
+                // ✅ FIX: Convert DataTable to List<dynamic>
+                var cleanData = dataTable.ToDynamicList();
+
+                if (cleanData.Count > 0)
+                    return Ok(ApiResponseHelper.Sucess(cleanData, "Data retrieved successfully"));
+                else
+                    return Ok(ApiResponseHelper.Fail("Record not found"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting country by id: {Id}", id);
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+                _logger.LogError(ex, "Error getting record");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
 
-        [HttpGet("active")]
-        public async Task<IActionResult> GetActive()
+        // ─── INSERT RECORD ──────────────────────────────────────────────────
+        [HttpPost("insertRecord")]
+        public async Task<IActionResult> InsertRecord([FromBody] CountryRequestDto request)
         {
             try
             {
-                var countries = await _countryRepository.GetActiveCountriesAsync();
-                return Ok(new { responseCode = 0, data = countries });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting active countries");
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
-            }
-        }
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid))
+                    return Ok(ApiResponseHelper.Fail("userid not found"));
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CountryRequestDto countryDto)
-        {
-            try
-            {
-                var exists = await _countryRepository.IsCountryExistsAsync(countryDto.CountryName);
-                if (exists)
+                var data = request.data;
+                if (data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined ||
+                    (data.ValueKind == JsonValueKind.Object && !data.EnumerateObject().Any()))
                 {
-                    return BadRequest(new { responseCode = 400, message = "Country name already exists" });
-                }
-
-                var country = await _countryRepository.CreateCountryAsync( countryDto);
-                return Ok(new { responseCode = 0, data = country, message = "Country created successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating country");
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
-            }
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] CountryRequestDto countryDto)
-        {
-            try
-            {
-                var exists = await _countryRepository.IsCountryExistsAsync(countryDto.CountryName, countryDto.CountryId);
-                if (exists)
-                {
-                    return BadRequest(new { responseCode = 400, message = "Country name already exists" });
-                }
-
-                var country = await _countryRepository.UpdateCountryAsync(countryDto);
-                if (country == null)
-                {
-                    return NotFound(new { responseCode = 404, message = "Country not found" });
+                    return Ok(ApiResponseHelper.Fail("Invalid/Empty data"));
                 }
 
-                return Ok(new { responseCode = 0, data = country, message = "Country updated successfully" });
+                var dataTable = await _countryService.InsertRecordAsync(userid, request);
+
+                if (dataTable.Rows.Count > 0)
+                    return Ok(ApiResponseHelper.Sucess(null, dataTable.Rows[0][0].ToString()));
+                else
+                    return Ok(ApiResponseHelper.Fail("No response received"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating country: {CountryId}", countryDto.CountryId);
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+                _logger.LogError(ex, "Error inserting record");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        // ─── UPDATE RECORD ──────────────────────────────────────────────────
+        [HttpPut("updateRecord")]
+        public async Task<IActionResult> UpdateRecord([FromBody] CountryRequestDto request)
         {
             try
             {
-                var result = await _countryRepository.DeleteCountryAsync(id);
-                if (!result)
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid))
+                    return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                if (string.IsNullOrEmpty(request.recordId))
+                    return Ok(ApiResponseHelper.Fail("Empty Record ID"));
+
+                var data = request.data;
+                if (data.ValueKind == JsonValueKind.Null || data.ValueKind == JsonValueKind.Undefined ||
+                    (data.ValueKind == JsonValueKind.Object && !data.EnumerateObject().Any()))
                 {
-                    return NotFound(new { responseCode = 404, message = "Country not found" });
+                    return Ok(ApiResponseHelper.Fail("Invalid/Empty data"));
                 }
-                return Ok(new { responseCode = 0, message = "Country deleted successfully" });
+
+                var dataTable = await _countryService.UpdateRecordAsync(userid, request);
+
+                if (dataTable.Rows.Count > 0)
+                    return Ok(ApiResponseHelper.Sucess(null, dataTable.Rows[0][0].ToString()));
+                else
+                    return Ok(ApiResponseHelper.Fail("No response received"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting country: {Id}", id);
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+                _logger.LogError(ex, "Error updating record");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
 
-        [HttpGet("check-exists")]
-        public async Task<IActionResult> CheckExists([FromQuery] string countryName, [FromQuery] int? excludeId = null)
+        // ─── DELETE RECORD ──────────────────────────────────────────────────
+        [HttpDelete("deleteRecord/{id}")]
+        public async Task<IActionResult> DeleteRecord(int id)
         {
             try
             {
-                var exists = await _countryRepository.IsCountryExistsAsync(countryName, excludeId);
-                return Ok(new { responseCode = 0, data = exists });
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid))
+                    return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new CountryRequestDto
+                {
+                    recordId = id.ToString(),
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                var dataTable = await _countryService.DeleteRecordAsync(userid, request);
+
+                if (dataTable.Rows.Count > 0)
+                    return Ok(ApiResponseHelper.Sucess(null, dataTable.Rows[0][0].ToString()));
+                else
+                    return Ok(ApiResponseHelper.Fail("No response received"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking country existence");
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+                _logger.LogError(ex, "Error deleting record");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
     }
-}
+}       

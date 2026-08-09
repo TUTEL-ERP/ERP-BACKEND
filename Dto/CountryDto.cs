@@ -1,4 +1,6 @@
 ﻿// Dto/CountryDto.cs
+using System.Text.Json;
+
 namespace server.Dto
 {
     public class CountryDto
@@ -12,11 +14,9 @@ namespace server.Dto
 
     public class CountryRequestDto
     {
-        public int CountryId { get; set; }
-        public string CountryName { get; set; } = string.Empty;
-        public string? CountryCode { get; set; }
-        public bool IsActive { get; set; } = true;
-        public int? ExcludeId { get; set; }
+        public string? formId { get; set; }
+        public JsonElement data { get; set; }
+        public string? recordId { get; set; }
     }
 
     public class CountryResponseDto
@@ -30,11 +30,5 @@ namespace server.Dto
         public string? Message { get; set; }
     }
 
-    public class ApiResponse<T>
-    {
-        public bool IsSuccess { get; set; }
-        public T? Data { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public int ResponseCode { get; set; }
-    }
+ 
 }
