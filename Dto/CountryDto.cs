@@ -12,7 +12,7 @@ namespace server.Dto
         public DateTime CreatedDate { get; set; }
     }
 
-    public class CountryRequestDto
+    public class CountryRequestDto  
     {
         public string? formId { get; set; }
         public JsonElement data { get; set; }

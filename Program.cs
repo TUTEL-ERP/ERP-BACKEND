@@ -1,4 +1,5 @@
 ﻿using ERP_API.Data;
+using Lov.Application.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using server.Interfaces.Repository;
 using server.Interfaces.Services;
 using server.Repository;
+using server.Repositroy;
 using server.Services;
 using System.Text;
 
@@ -63,15 +65,31 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<IProvinceRepository, ProvinceRepository>();
+builder.Services.AddScoped<ICityRepository, CityRepository>();
+builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
+builder.Services.AddScoped<IBranchRepository, BranchRepository>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+
 
 // Register Services - ✅ ALL REGISTERED
+builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IProvinceService, ProvinceService>();
 builder.Services.AddScoped<ICountryService, CountryService>();
-builder.Services.AddScoped<IJwtService, JwtService>(); // ✅ UNCOMMENTED
+builder.Services.AddScoped<ICityService, CityService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ILovDataService, LovDataService>();
+builder.Services.AddScoped<IBranchService, BranchService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
 
-// Add AutoMapper
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 // JWT Configuration
@@ -114,7 +132,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ✅ Add Global Exception Handling
+
 app.Use(async (context, next) =>
 {
     try
@@ -135,11 +153,9 @@ app.Use(async (context, next) =>
     }
 });
 
-if (app.Environment.IsDevelopment())
-{
+
     app.UseSwagger();
     app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseRouting();
