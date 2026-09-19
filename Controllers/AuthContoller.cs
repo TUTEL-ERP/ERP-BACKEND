@@ -1,9 +1,9 @@
-﻿// AuthController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using server.Dto;
 using server.Interfaces.Services;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace server.Controllers
 {
@@ -13,20 +13,42 @@ namespace server.Controllers
     {
         private readonly IAuthService _authService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public AuthController(IAuthService authService, ILogger<AuthController> logger)
+        public AuthController(
+            IAuthService authService,
+            ILogger<AuthController> logger,
+            IWebHostEnvironment env)
         {
             _authService = authService;
             _logger = logger;
+            _env = env;
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // LOGIN — sets HttpOnly cookies + plain "user" cookie
+        // ═══════════════════════════════════════════════════════════
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
             {
                 var response = await _authService.LoginAsync(request);
-                return Ok(new { responseCode = 0, message = "Login successful", data = response });
+
+                WriteAuthCookies(response);
+                var u = response.User;
+                return Ok(new
+                {
+                    responseCode = 0,
+                    message = "Login successful",
+                    data = new
+                    {
+                        userId = u.Id,
+                        username = u.Username,
+                        email = u.Email,
+                        role = u.Role
+                    }
+                });
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -39,6 +61,78 @@ namespace server.Controllers
             }
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // REFRESH TOKEN — reads cookie, sets new cookies
+        // ═══════════════════════════════════════════════════════════
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            try
+            {
+                if (!Request.Cookies.TryGetValue("refresh_token", out var refreshToken)
+                    || string.IsNullOrEmpty(refreshToken))
+                {
+                    return Unauthorized(new { responseCode = 401, message = "No refresh token" });
+                }
+
+                var response = await _authService.RefreshTokenAsync(new RefreshTokenRequest
+                {
+                    RefreshToken = refreshToken
+                });
+
+                WriteAuthCookies(response);
+
+                return Ok(new { responseCode = 0, message = "Token refreshed" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { responseCode = 401, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Refresh token error");
+                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LOGOUT — revoke + clear cookies
+        // ═══════════════════════════════════════════════════════════
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                await _authService.LogoutAsync(userId);
+
+                ClearAuthCookies();
+
+                return Ok(new { responseCode = 0, message = "Logged out successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Logout error");
+                ClearAuthCookies();   // still clear even if server fails
+                return Ok(new { responseCode = 0, message = "Logged out" });
+            }
+        }
+
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            var user = new
+            {
+                id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                username = User.FindFirst(ClaimTypes.Name)?.Value,
+                email = User.FindFirst(ClaimTypes.Email)?.Value,
+                role = User.FindFirst(ClaimTypes.Role)?.Value
+            };
+            return Ok(new { responseCode = 0, data = user });
+        }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -58,42 +152,6 @@ namespace server.Controllers
             }
         }
 
-        [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
-        {
-            try
-            {
-                var response = await _authService.RefreshTokenAsync(request);
-                return Ok(new { responseCode = 0, message = "Token refreshed successfully", data = response });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { responseCode = 401, message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Refresh token error");
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
-            }
-        }
-
-        [Authorize]
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            try
-            {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                await _authService.LogoutAsync(userId);
-                return Ok(new { responseCode = 0, message = "Logged out successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Logout error");
-                return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
-            }
-        }
-
         [Authorize]
         [HttpPost("revoke-all")]
         public async Task<IActionResult> RevokeAllTokens()
@@ -109,6 +167,62 @@ namespace server.Controllers
                 _logger.LogError(ex, "Revoke tokens error");
                 return StatusCode(500, new { responseCode = 500, message = "An error occurred" });
             }
+        }
+        private void WriteAuthCookies(AuthResponse response)
+        {
+            bool isHttps = Request.IsHttps;
+
+            Response.Cookies.Append("access_token", response.AccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+                Path = "/"
+            });
+
+            Response.Cookies.Append("refresh_token", response.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                Path = "/api/auth"
+            });
+
+            var u = response.User ?? new UserDto
+            {
+                Id = response.UserId,
+                Username = response.Username,
+                Email = response.Email,
+                Role = response.Role
+            };
+
+            Response.Cookies.Append("user", JsonSerializer.Serialize(new
+            {
+                id = u.Id,
+                username = u.Username,
+                email = u.Email,
+                role = u.Role
+            }), new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = isHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                Path = "/"
+            });
+        }
+
+
+        private void ClearAuthCookies()
+        {
+            Response.Cookies.Delete("access_token", new CookieOptions { Path = "/" });
+            Response.Cookies.Delete("refresh_token", new CookieOptions { Path = "/api/auth" });
+            Response.Cookies.Delete("user", new CookieOptions { Path = "/" });
+
+            // Also try root path in case they were set there previously
+            Response.Cookies.Delete("refresh_token", new CookieOptions { Path = "/" });
         }
     }
 }

@@ -13,7 +13,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
+// ═══════════════════════════════════════════════════════════════
+// Controllers + JSON
+// ═══════════════════════════════════════════════════════════════
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -25,6 +27,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "ERP API", Version = "v1" });
+
+    // ✅ Still support Bearer header in Swagger (for manual testing)
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -50,15 +54,17 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Database Context
+// ═══════════════════════════════════════════════════════════════
+// Database
+// ═══════════════════════════════════════════════════════════════
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    // Optional: Add logging for SQL queries
-    // options.LogTo(Console.WriteLine, LogLevel.Information);
 });
 
-// Register Repositories
+// ═══════════════════════════════════════════════════════════════
+// Repositories + Services
+// ═══════════════════════════════════════════════════════════════
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -72,9 +78,11 @@ builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IUserSetupRepository, UserSetupRepository>();
+builder.Services.AddScoped<IPurchaseRequisitionRepository, PurchaseRequisitionRepository>();
 
 
-// Register Services - ✅ ALL REGISTERED
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
@@ -88,16 +96,23 @@ builder.Services.AddScoped<IBranchService, BranchService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<IUserSetupService, UserSetupService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+
+
+
+builder.Services.AddScoped<IPurchaseRequisitionService, PurchaseRequisitionService>();
 
 
 builder.Services.AddAutoMapper(typeof(Program));
 
-// JWT Configuration
+// ═══════════════════════════════════════════════════════════════
+// JWT — with cookie reader
+// ═══════════════════════════════════════════════════════════════
 var jwtSecret = builder.Configuration["Jwt:Secret"];
 if (string.IsNullOrEmpty(jwtSecret))
-{
     throw new Exception("JWT Secret is missing in appsettings.json");
-}
+
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
@@ -120,16 +135,41 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.TryGetValue("access_token", out var cookieToken)
+                && !string.IsNullOrEmpty(cookieToken))
+            {
+                context.Token = cookieToken;
+            }
+            else if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+            {
+                var header = authHeader.ToString();
+                if (header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    context.Token = header.Substring("Bearer ".Length).Trim();
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
+
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowAngular", policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        policy.WithOrigins(
+                "http://localhost:4200",
+                "https://localhost:4200"
+              )
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();       
     });
 });
-
 var app = builder.Build();
 
 
@@ -147,27 +187,25 @@ app.Use(async (context, next) =>
         {
             responseCode = 500,
             message = ex.Message,
-            // Remove in production
             stackTrace = ex.StackTrace
         }));
     }
 });
 
+app.UseSwagger();
+app.UseSwaggerUI();
 
-    app.UseSwagger();
-    app.UseSwaggerUI();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors("AllowAll");
+
+app.UseCors("AllowAngular");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    dbContext.Database.EnsureCreated(); // Or use Migrate() for migrations
-//}
 
 app.Run();
