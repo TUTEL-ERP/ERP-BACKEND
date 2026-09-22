@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using server.Dto;
 using server.Interfaces.Services;
 using System.Security.Claims;
@@ -171,14 +172,13 @@ namespace server.Controllers
         private void WriteAuthCookies(AuthResponse response)
         {
             bool isHttps = Request.IsHttps;
-
             Response.Cookies.Append("access_token", response.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = isHttps,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddMinutes(15),
-                Path = "/"
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/",
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
             Response.Cookies.Append("refresh_token", response.RefreshToken, new CookieOptions

@@ -130,6 +130,32 @@ namespace server.Controllers
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
+        [HttpGet("GetAllItems")]
+        public async Task<IActionResult> GetAllItems()
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid))
+                    return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new PurchaseRequisitionRequestDto
+                {
+                    formId = "PurchaseRequisition",
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                var dt = await _service.GetAllItemsAsync(userid, request);
+                var cleanData = DataTableHelper.ToDynamicList(dt);
+
+                return Ok(ApiResponseHelper.Sucess(cleanData, "Items retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting items");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
 
         [HttpDelete("deleteRecord/{id}")]
         public async Task<IActionResult> DeleteRecord(int id)

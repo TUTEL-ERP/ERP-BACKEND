@@ -44,5 +44,11 @@ namespace server.Services
             var ds = await _repo.ExecuteProcedureAsync(u, PurchaseRequisitionAction.DELETE, r);
             return ds.Tables.Count > 0 ? ds.Tables[0] : new DataTable();
         }
+
+        public async Task<DataTable> GetAllItemsAsync(string u, PurchaseRequisitionRequestDto r)
+        {
+            var ds = await _repo.ExecuteProcedureAsync(u, PurchaseRequisitionAction.GI, r);
+            return ds.Tables.Count > 0 ? ds.Tables[0] : new DataTable();
+        }
     }
 }

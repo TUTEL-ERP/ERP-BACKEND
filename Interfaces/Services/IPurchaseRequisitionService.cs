@@ -10,6 +10,7 @@ namespace server.Interfaces.Services
         Task<DataSet> GetMasterDetailAsync(string usrname, PurchaseRequisitionRequestDto request);
         Task<DataTable> InsertRecordAsync(string usrname, PurchaseRequisitionRequestDto request);
         Task<DataTable> UpdateRecordAsync(string usrname, PurchaseRequisitionRequestDto request);
+        Task<DataTable> GetAllItemsAsync(string u, PurchaseRequisitionRequestDto r);
         Task<DataTable> DeleteRecordAsync(string usrname, PurchaseRequisitionRequestDto request);
     }
 }
