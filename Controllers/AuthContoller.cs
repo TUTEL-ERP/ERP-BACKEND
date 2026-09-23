@@ -171,12 +171,16 @@ namespace server.Controllers
         }
         private void WriteAuthCookies(AuthResponse response)
         {
-            bool isHttps = Request.IsHttps;
+            // Cookies MUST be:
+            //   - SameSite=None  (cross-domain)
+            //   - Secure=true    (required when SameSite=None)
+            //   - Path=/         (for user + access_token; refresh is scoped)
+
             Response.Cookies.Append("access_token", response.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                Secure = true,                        
+                SameSite = SameSiteMode.None,         
                 Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
@@ -184,10 +188,10 @@ namespace server.Controllers
             Response.Cookies.Append("refresh_token", response.RefreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = isHttps,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddDays(7),
-                Path = "/api/auth"
+                Secure = true,                       
+                SameSite = SameSiteMode.None,         
+                Path = "/api/auth",                   
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
 
             var u = response.User ?? new UserDto
@@ -206,23 +210,32 @@ namespace server.Controllers
                 role = u.Role
             }), new CookieOptions
             {
-                HttpOnly = false,
-                Secure = isHttps,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddDays(7),
-                Path = "/"
+                HttpOnly = false,                    
+                Secure = true,                        
+                SameSite = SameSiteMode.None,         
+                Path = "/",
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
         }
 
-
         private void ClearAuthCookies()
         {
-            Response.Cookies.Delete("access_token", new CookieOptions { Path = "/" });
-            Response.Cookies.Delete("refresh_token", new CookieOptions { Path = "/api/auth" });
-            Response.Cookies.Delete("user", new CookieOptions { Path = "/" });
+            var crossSiteOpts = new CookieOptions
+            {
+                Path = "/",
+                Secure = true,
+                SameSite = SameSiteMode.None
+            };
 
-            // Also try root path in case they were set there previously
-            Response.Cookies.Delete("refresh_token", new CookieOptions { Path = "/" });
+            Response.Cookies.Delete("access_token", crossSiteOpts);
+            Response.Cookies.Delete("user", crossSiteOpts);
+
+            Response.Cookies.Delete("refresh_token", new CookieOptions
+            {
+                Path = "/api/auth",
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
         }
     }
 }
