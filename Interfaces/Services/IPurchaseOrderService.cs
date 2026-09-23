@@ -12,5 +12,8 @@ namespace server.Interfaces.Services
         Task<DataTable> DeleteRecordAsync(string u, PurchaseOrderRequestDto r);
         Task<DataTable> GetAllItemsAsync(string u, PurchaseOrderRequestDto r);
         Task<string> GetNextPONumberAsync(string u, PurchaseOrderRequestDto r);
+        Task<DataSet> GetPRDetailsAsync(string u, PurchaseOrderRequestDto r);
+        Task<DataSet> GetPRDetailsAsync_ApprovedPR(string u, PurchaseOrderRequestDto r);
+
     }
 }

@@ -55,4 +55,27 @@ namespace server.Dto
         public JsonElement data { get; set; }
         public string? recordId { get; set; }
     }
+
+    public class PRDetailsDto
+    {
+        public int RequisitionId { get; set; }
+        public int? DepartmentId { get; set; }
+        public string? DepartmentName { get; set; }
+        public string? RequestedBy { get; set; }
+        public DateTime? RequestDate { get; set; }
+        public string? Status { get; set; }
+        public string? Remarks { get; set; }
+        public List<PRLineDto> Lines { get; set; } = new();
+    }
+
+    public class PRLineDto
+    {
+        public int RequisitionLineId { get; set; }
+        public int ItemId { get; set; }
+        public string ItemCode { get; set; } = string.Empty;
+        public string ItemName { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal LineTotal { get; set; }
+    }
 }

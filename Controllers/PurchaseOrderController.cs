@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using server.Dto;
 using server.Helpers;
 using server.Interfaces.Services;
+using System.Data;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -173,6 +174,65 @@ namespace server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+        // ✅ GET: Approved PR list (for LOV modal)
+        [HttpGet("approved-pr-list")]
+        public async Task<IActionResult> GetApprovedPRList()
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new PurchaseOrderRequestDto
+                {
+                    formId = "PurchaseOrder",
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                // Uses the same repo method (action = LOV_APPROVED_PR)
+                var ds = await _service.GetPRDetailsAsync_ApprovedPR(userid, request); // see below
+                var dt = ds.Tables.Count > 0 ? ds.Tables[0] : new DataTable();
+
+                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Approved PRs retrieved"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting approved PR list");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+
+        [HttpGet("pr-details/{requisitionId}")]
+        public async Task<IActionResult> GetPRDetails(int requisitionId)
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var payload = JsonDocument.Parse(
+                    JsonSerializer.Serialize(new { requisitionId })
+                ).RootElement;
+
+                var request = new PurchaseOrderRequestDto { data = payload };
+                var ds = await _service.GetPRDetailsAsync(userid, request);
+
+                if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
+                    return Ok(ApiResponseHelper.Fail("PR not found"));
+
+                var master = DataTableHelper.ToDynamicList(ds.Tables[0]).FirstOrDefault();
+                var lines = ds.Tables.Count > 1
+                    ? DataTableHelper.ToDynamicList(ds.Tables[1])
+                    : new List<dynamic>();
+
+                return Ok(ApiResponseHelper.Sucess(new { master, lines }, "PR details retrieved"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting PR details");
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }

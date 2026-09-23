@@ -57,5 +57,11 @@ namespace server.Services
                 return ds.Tables[0].Rows[0][0]?.ToString() ?? "";
             return "";
         }
+
+        public async Task<DataSet> GetPRDetailsAsync(string u, PurchaseOrderRequestDto r)
+            => await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.GET_PR_DETAILS, r);
+
+        public async Task<DataSet> GetPRDetailsAsync_ApprovedPR(string u, PurchaseOrderRequestDto r)
+    => await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.LOV_APPROVED_PR, r);
     }
 }
