@@ -81,6 +81,12 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IUserSetupRepository, UserSetupRepository>();
 builder.Services.AddScoped<IPurchaseRequisitionRepository, PurchaseRequisitionRepository>();
+builder.Services.AddScoped<IPurchaseReturnRepository, PurchaseReturnRepository>();
+builder.Services.AddScoped<ISaleRepository, SaleRepository>();
+
+
+//=================================
+
 
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IAreaService, AreaService>();
@@ -99,12 +105,9 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IUserSetupService, UserSetupService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
-
-
-
+builder.Services.AddScoped<IPurchaseReturnService, PurchaseReturnService>();
 builder.Services.AddScoped<IPurchaseRequisitionService, PurchaseRequisitionService>();
-
-
+builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddAutoMapper(typeof(Program));
 
 // ═══════════════════════════════════════════════════════════════
