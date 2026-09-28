@@ -83,7 +83,8 @@ builder.Services.AddScoped<IUserSetupRepository, UserSetupRepository>();
 builder.Services.AddScoped<IPurchaseRequisitionRepository, PurchaseRequisitionRepository>();
 builder.Services.AddScoped<IPurchaseReturnRepository, PurchaseReturnRepository>();
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
-
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
 
 //=================================
 
@@ -110,6 +111,9 @@ builder.Services.AddScoped<IPurchaseRequisitionService, PurchaseRequisitionServi
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddAutoMapper(typeof(Program));
 
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+builder.Services.AddScoped<IReceiptService, ReceiptService>();
 // ═══════════════════════════════════════════════════════════════
 // JWT — with cookie reader
 // ═══════════════════════════════════════════════════════════════
