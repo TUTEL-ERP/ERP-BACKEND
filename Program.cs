@@ -85,10 +85,10 @@ builder.Services.AddScoped<IPurchaseReturnRepository, PurchaseReturnRepository>(
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
+builder.Services.AddScoped<IChartOfAccountsService, ChartOfAccountsService>();
 
 //=================================
-
-
+builder.Services.AddScoped<IChartOfAccountsRepository, ChartOfAccountsRepository>();
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
