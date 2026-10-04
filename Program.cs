@@ -86,8 +86,11 @@ builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
 builder.Services.AddScoped<IChartOfAccountsService, ChartOfAccountsService>();
+builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 
 //=================================
+
+builder.Services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
 builder.Services.AddScoped<IChartOfAccountsRepository, ChartOfAccountsRepository>();
 builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
 builder.Services.AddScoped<IAreaService, AreaService>();
