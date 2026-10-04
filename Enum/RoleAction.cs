@@ -1,11 +1,12 @@
-﻿// Enum/UserAction.cs
 namespace server.Enums
 {
-    public enum UserAction
+    public enum RoleAction
     {
         GRIDDATA,
         SINGELRECORD,
-        GET_ROLES,      
+        GET_PERMISSIONS,
+        GET_FORMS,
+        GET_NEXT_ROLE_CODE,
         INSERT,
         UPDATE,
         DELETE

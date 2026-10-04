@@ -152,7 +152,30 @@ namespace server.Controllers
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
+                // Calls SP_USER_SETUP with action = GET_ROLES
+                var request = new UserRequestDto
+                {
+                    formId = "User",
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                var dt = await _service.GetRolesAsync(userid, request);
+                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Roles retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting roles");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
         [HttpDelete("deleteRecord/{id}")]
         public async Task<IActionResult> DeleteRecord(int id)
         {

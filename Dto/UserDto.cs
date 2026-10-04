@@ -12,6 +12,9 @@ namespace server.Dto
         public string? Address { get; set; }
         public string? Gender { get; set; }
         public string? Role { get; set; }
+        public int? RoleId { get; set; }             
+        public string? RoleName { get; set; }        
+        public string? RoleCode { get; set; }         
         public string? Notes { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
