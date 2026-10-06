@@ -13,9 +13,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ═══════════════════════════════════════════════════════════════
-// Controllers + JSON
-// ═══════════════════════════════════════════════════════════════
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -88,7 +86,11 @@ builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
 builder.Services.AddScoped<IChartOfAccountsService, ChartOfAccountsService>();
 builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 //=================================
+
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
 builder.Services.AddScoped<IChartOfAccountsRepository, ChartOfAccountsRepository>();
