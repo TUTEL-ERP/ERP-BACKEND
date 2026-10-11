@@ -89,7 +89,10 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ISaleReturnService, SaleReturnService>();
+builder.Services.AddScoped<IPaymentAdjustmentService, PaymentAdjustmentService>();
 //=================================
+builder.Services.AddScoped<IPaymentAdjustmentRepository, PaymentAdjustmentRepository>();
+
 builder.Services.AddScoped<ISaleReturnRepository, SaleReturnRepository>();
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
