@@ -87,14 +87,11 @@ builder.Services.AddScoped<IChartOfAccountsService, ChartOfAccountsService>();
 builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-
-//=================================
-
-builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
-
+builder.Services.AddScoped<ISaleReturnService, SaleReturnService>();
 //=================================
-
+builder.Services.AddScoped<ISaleReturnRepository, SaleReturnRepository>();
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
