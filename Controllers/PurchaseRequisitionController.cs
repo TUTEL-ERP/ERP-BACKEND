@@ -49,7 +49,7 @@ namespace server.Controllers
         }
 
 
-[HttpGet("record/{id}")]
+        [HttpGet("record/{id}")]
         public async Task<IActionResult> SelectRecord(int id)
         {
             try
@@ -174,6 +174,66 @@ namespace server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting record");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+        // ─── APPROVE ──────────────────────────────────────────────
+        [HttpPost("approve/{recordId}")]
+        public async Task<IActionResult> Approve(int recordId)
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new PurchaseRequisitionRequestDto
+                {
+                    recordId = recordId.ToString(),
+                    data = JsonDocument.Parse("{}").RootElement
+                };
+
+                var dt = await _service.ApproveAsync(userid, request);
+                return dt.Rows.Count > 0
+                    ? Ok(ApiResponseHelper.Sucess(null, dt.Rows[0][0].ToString()))
+                    : Ok(ApiResponseHelper.Fail("No response received"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+
+        // ─── REJECT ───────────────────────────────────────────────
+        [HttpPost("reject/{recordId}")]
+        public async Task<IActionResult> Reject(int recordId, [FromBody] JsonElement body)
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var payload = JsonDocument.Parse(JsonSerializer.Serialize(new
+                {
+                    reason = body.ValueKind != JsonValueKind.Undefined
+                             ? body.TryGetProperty("reason", out var r) ? r.GetString() : null
+                             : null
+                })).RootElement;
+
+                var request = new PurchaseRequisitionRequestDto
+                {
+                    recordId = recordId.ToString(),
+                    data = payload
+                };
+
+                var dt = await _service.RejectAsync(userid, request);
+                return dt.Rows.Count > 0
+                    ? Ok(ApiResponseHelper.Sucess(null, dt.Rows[0][0].ToString()))
+                    : Ok(ApiResponseHelper.Fail("No response received"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting");
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }

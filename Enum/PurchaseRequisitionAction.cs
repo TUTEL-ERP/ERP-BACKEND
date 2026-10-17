@@ -6,6 +6,8 @@
         SINGELRECORD,
         INSERT,
         UPDATE,
+        APPROVE,     
+        REJECT,       
         GI,
         DELETE
     }

@@ -12,5 +12,7 @@ namespace server.Interfaces.Services
         Task<DataTable> UpdateRecordAsync(string usrname, PurchaseRequisitionRequestDto request);
         Task<DataTable> GetAllItemsAsync(string u, PurchaseRequisitionRequestDto r);
         Task<DataTable> DeleteRecordAsync(string usrname, PurchaseRequisitionRequestDto request);
+        Task<DataTable> ApproveAsync(string usrname, PurchaseRequisitionRequestDto request);
+        Task<DataTable> RejectAsync(string usrname, PurchaseRequisitionRequestDto request);
     }
 }
