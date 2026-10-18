@@ -28,7 +28,15 @@ namespace server.Controllers
             if (string.IsNullOrEmpty(userid)) userid = User.FindFirst("userID")?.Value;
             return userid;
         }
-
+        private string GetUserName()
+        {
+            var username = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (string.IsNullOrEmpty(username))
+                username = User.FindFirst("username")?.Value;
+            if (string.IsNullOrEmpty(username))
+                username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return username ?? "unknown";
+        }
         [HttpGet("grid/{formName}")]
         public async Task<IActionResult> GetGridData(string formName)
         {
@@ -184,6 +192,7 @@ namespace server.Controllers
             try
             {
                 var userid = GetUserId();
+                 var username = GetUserName(); 
                 if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
                 var request = new PurchaseRequisitionRequestDto
@@ -192,7 +201,7 @@ namespace server.Controllers
                     data = JsonDocument.Parse("{}").RootElement
                 };
 
-                var dt = await _service.ApproveAsync(userid, request);
+                var dt = await _service.ApproveAsync(username, request);
                 return dt.Rows.Count > 0
                     ? Ok(ApiResponseHelper.Sucess(null, dt.Rows[0][0].ToString()))
                     : Ok(ApiResponseHelper.Fail("No response received"));
@@ -226,7 +235,8 @@ namespace server.Controllers
                     data = payload
                 };
 
-                var dt = await _service.RejectAsync(userid, request);
+                var username = GetUserName();
+                var dt = await _service.RejectAsync(username, request);
                 return dt.Rows.Count > 0
                     ? Ok(ApiResponseHelper.Sucess(null, dt.Rows[0][0].ToString()))
                     : Ok(ApiResponseHelper.Fail("No response received"));

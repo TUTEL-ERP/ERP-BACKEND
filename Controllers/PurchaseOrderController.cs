@@ -30,7 +30,15 @@ namespace server.Controllers
                 userid = User.FindFirst("userID")?.Value;
             return userid;
         }
-
+private string GetUserName()
+{
+    var username = User.FindFirst(ClaimTypes.Name)?.Value;           
+    if (string.IsNullOrEmpty(username))
+        username = User.FindFirst("username")?.Value;                
+    if (string.IsNullOrEmpty(username))
+        username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; 
+    return username ?? "unknown";
+}
         [HttpGet("grid/{formName}")]
         public async Task<IActionResult> GetGridData(string formName)
         {
@@ -177,7 +185,6 @@ namespace server.Controllers
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
-        // ✅ GET: Approved PR list (for LOV modal)
         [HttpGet("approved-pr-list")]
         public async Task<IActionResult> GetApprovedPRList()
         {
@@ -211,6 +218,7 @@ public async Task<IActionResult> Approve(int recordId)
     try
     {
         var userid = GetUserId();
+        var username = GetUserName();
         if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
 
@@ -220,7 +228,7 @@ public async Task<IActionResult> Approve(int recordId)
             data = JsonDocument.Parse("{}").RootElement
         };
 
-        var dt = await _service.ApproveAsync(userid, request);
+        var dt = await _service.ApproveAsync(username, request);
         return dt.Rows.Count > 0
             ? Ok(ApiResponseHelper.Sucess(null, dt.Rows[0][0].ToString()))
             : Ok(ApiResponseHelper.Fail("No response received"));
@@ -239,6 +247,7 @@ public async Task<IActionResult> Reject(int recordId, [FromBody] JsonElement bod
     try
     {
         var userid = GetUserId();
+        var username = GetUserName();
         if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
       
@@ -256,7 +265,7 @@ public async Task<IActionResult> Reject(int recordId, [FromBody] JsonElement bod
             data = payload
         };
 
-        var dt = await _service.RejectAsync(userid, request);
+        var dt = await _service.RejectAsync(username, request);
         return dt.Rows.Count > 0
             ? Ok(ApiResponseHelper.Sucess(null, dt.Rows[0][0].ToString()))
             : Ok(ApiResponseHelper.Fail("No response received"));
