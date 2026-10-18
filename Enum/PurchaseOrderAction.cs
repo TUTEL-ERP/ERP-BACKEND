@@ -12,6 +12,8 @@
         GET_NEXT_PO_NUMBER,
         INSERT,
         UPDATE,
+          APPROVE,        
+        REJECT,  
         DELETE
     }
 }

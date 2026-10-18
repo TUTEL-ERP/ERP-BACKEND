@@ -43,7 +43,17 @@ namespace server.Services
             var ds = await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.DELETE, r);
             return ds.Tables.Count > 0 ? ds.Tables[0] : new DataTable();
         }
+public async Task<DataTable> ApproveAsync(string u, PurchaseOrderRequestDto r)
+{
+    var ds = await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.APPROVE, r);
+    return ds.Tables.Count > 0 ? ds.Tables[0] : new DataTable();
+}
 
+public async Task<DataTable> RejectAsync(string u, PurchaseOrderRequestDto r)
+{
+    var ds = await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.REJECT, r);
+    return ds.Tables.Count > 0 ? ds.Tables[0] : new DataTable();
+}
         public async Task<DataTable> GetAllItemsAsync(string u, PurchaseOrderRequestDto r)
         {
             var ds = await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.LOV_PO_ITEM, r);
@@ -64,4 +74,5 @@ namespace server.Services
         public async Task<DataSet> GetPRDetailsAsync_ApprovedPR(string u, PurchaseOrderRequestDto r)
     => await _repo.ExecuteProcedureAsync(u, PurchaseOrderAction.LOV_APPROVED_PR, r);
     }
+    
 }

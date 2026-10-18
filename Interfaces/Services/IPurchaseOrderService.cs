@@ -14,6 +14,8 @@ namespace server.Interfaces.Services
         Task<string> GetNextPONumberAsync(string u, PurchaseOrderRequestDto r);
         Task<DataSet> GetPRDetailsAsync(string u, PurchaseOrderRequestDto r);
         Task<DataSet> GetPRDetailsAsync_ApprovedPR(string u, PurchaseOrderRequestDto r);
+        Task<DataTable> ApproveAsync(string u, PurchaseOrderRequestDto r);
+Task<DataTable> RejectAsync(string u, PurchaseOrderRequestDto r);
 
     }
 }
