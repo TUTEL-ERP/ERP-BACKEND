@@ -91,10 +91,10 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ISaleReturnService, SaleReturnService>();
 builder.Services.AddScoped<IPaymentAdjustmentService, PaymentAdjustmentService>();
 builder.Services.AddScoped<IReceiptAdjustmentService, ReceiptAdjustmentService>();
+builder.Services.AddScoped<IGRNService, GRNService>();
 
 //=================================
-
-
+builder.Services.AddScoped<IGRNRepository, GRNRepository>();
 builder.Services.AddScoped<IReceiptAdjustmentRepository, ReceiptAdjustmentRepository>();
 builder.Services.AddScoped<IPaymentAdjustmentRepository, PaymentAdjustmentRepository>();
 builder.Services.AddScoped<ISaleReturnRepository, SaleReturnRepository>();
