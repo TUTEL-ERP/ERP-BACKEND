@@ -31,52 +31,36 @@ namespace server.Controllers
         }
 
         // ✅ MAIN ENDPOINT — returns everything in one call
-        [HttpGet("all")]
-        public async Task<IActionResult> GetAll()
+       [HttpGet("all")]
+public async Task<IActionResult> GetAll()
+{
+    try
+    {
+        var userid = GetUserId();
+        if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+        var request = new DashboardRequestDto { data = JsonDocument.Parse("{}").RootElement };
+        var ds = await _service.GetAllDashboardDataAsync(userid, request);
+
+        var result = new
         {
-            try
-            {
-                var userid = GetUserId();
-                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+            kpis = ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0
+                ? DataTableHelper.ToDynamicList(ds.Tables[0]).FirstOrDefault()
+                : null,
 
-                var request = new DashboardRequestDto { data = JsonDocument.Parse("{}").RootElement };
-                var ds = await _service.GetAllDashboardDataAsync(userid, request);
+            lowStock = ds.Tables.Count > 1
+                ? DataTableHelper.ToDynamicList(ds.Tables[1])
+                : new List<dynamic>()
+        };
 
-                var result = new
-                {
-                    kpis = ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0
-                        ? DataTableHelper.ToDynamicList(ds.Tables[0]).FirstOrDefault()
-                        : null,
-
-                    salesTrend = ds.Tables.Count > 1
-                        ? DataTableHelper.ToDynamicList(ds.Tables[1])
-                        : new List<dynamic>(),
-
-                    topCustomers = ds.Tables.Count > 2
-                        ? DataTableHelper.ToDynamicList(ds.Tables[2])
-                        : new List<dynamic>(),
-
-                    topItems = ds.Tables.Count > 3
-                        ? DataTableHelper.ToDynamicList(ds.Tables[3])
-                        : new List<dynamic>(),
-
-                    recentSales = ds.Tables.Count > 4
-                        ? DataTableHelper.ToDynamicList(ds.Tables[4])
-                        : new List<dynamic>(),
-
-                    recentPurchases = ds.Tables.Count > 5
-                        ? DataTableHelper.ToDynamicList(ds.Tables[5])
-                        : new List<dynamic>()
-                };
-
-                return Ok(ApiResponseHelper.Sucess(result, "Dashboard data retrieved"));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting dashboard data");
-                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
-            }
-        }
+        return Ok(ApiResponseHelper.Sucess(result, "Dashboard data retrieved"));
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error getting dashboard data");
+        return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+    }
+}
 
         // Optional — just KPIs
         [HttpGet("kpis")]
