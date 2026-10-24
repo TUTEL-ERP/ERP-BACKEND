@@ -14,11 +14,22 @@ namespace server.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserSetupService _service;
+        private readonly ICompanyService _companyService;
+        private readonly IBranchService _branchService;
+        private readonly IDepartmentService _deptService;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUserSetupService service, ILogger<UsersController> logger)
+        public UsersController(
+            IUserSetupService service,
+            ICompanyService companyService,
+            IBranchService branchService,
+            IDepartmentService deptService,
+            ILogger<UsersController> logger)
         {
             _service = service;
+            _companyService = companyService;
+            _branchService = branchService;
+            _deptService = deptService;
             _logger = logger;
         }
 
@@ -176,6 +187,10 @@ namespace server.Controllers
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
+
+
+
+
         [HttpDelete("deleteRecord/{id}")]
         public async Task<IActionResult> DeleteRecord(int id)
         {
@@ -193,6 +208,62 @@ namespace server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting record");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+        [HttpGet("companies")]
+        public async Task<IActionResult> GetCompanies()
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new CompanyRequestDto { data = JsonDocument.Parse("{}").RootElement };
+                var dt = await _companyService.GetGridDataAsync(userid, request);
+                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Companies retrieved"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting companies");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+
+        [HttpGet("branches")]
+        public async Task<IActionResult> GetBranches()
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new BranchRequestDto { data = JsonDocument.Parse("{}").RootElement };
+                var dt = await _branchService.GetGridDataAsync(userid, request);
+                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Branches retrieved"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting branches");
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+
+        [HttpGet("departments")]
+        public async Task<IActionResult> GetDepartments()
+        {
+            try
+            {
+                var userid = GetUserId();
+                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new DepartmentRequestDto { data = JsonDocument.Parse("{}").RootElement };
+                var dt = await _deptService.GetGridDataAsync(userid, request);
+                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Departments retrieved"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting departments");
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }

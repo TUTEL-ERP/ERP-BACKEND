@@ -11,6 +11,12 @@ namespace server.Dto
         public string? Phone { get; set; }
         public string? Address { get; set; }
         public string? Gender { get; set; }
+        
+        // ✅ NEW FIELDS
+        public int? CompanyId { get; set; }
+        public int? BranchId { get; set; }
+        public int? DepartmentId { get; set; }
+        
         public string? Role { get; set; }
         public int? RoleId { get; set; }             
         public string? RoleName { get; set; }        
