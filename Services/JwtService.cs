@@ -27,7 +27,10 @@ namespace server.Services
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role ?? "User")
+                new Claim(ClaimTypes.Role, user.Role ?? "User"),
+                   new Claim("CompanyId", user.CompanyId?.ToString() ?? ""),
+    new Claim("BranchId", user.BranchId?.ToString() ?? ""),
+    new Claim("DepartmentId", user.DepartmentId?.ToString() ?? "")
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor

@@ -27,5 +27,8 @@ namespace server.Enity
         public DateTime? UpdatedAt { get; set; }
         public bool IsActive { get; set; } = true;
         public string? Role { get; set; } = "User";
+        public int? CompanyId { get; set; }
+public int? BranchId { get; set; }
+public int? DepartmentId { get; set; }
     }
 }

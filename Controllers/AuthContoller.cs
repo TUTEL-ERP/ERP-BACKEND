@@ -47,7 +47,10 @@ namespace server.Controllers
                         userId = u.Id,
                         username = u.Username,
                         email = u.Email,
-                        role = u.Role
+                        role = u.Role,
+                        companyId = u.CompanyId,       // ✅ NEW
+                        branchId = u.BranchId,         // ✅ NEW
+                        departmentId = u.DepartmentId
                     }
                 });
             }
@@ -179,8 +182,8 @@ namespace server.Controllers
             Response.Cookies.Append("access_token", response.AccessToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,                        
-                SameSite = SameSiteMode.None,         
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
@@ -188,9 +191,9 @@ namespace server.Controllers
             Response.Cookies.Append("refresh_token", response.RefreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,                       
-                SameSite = SameSiteMode.None,         
-                Path = "/api/auth",                   
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/api/auth",
                 Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
 
@@ -210,9 +213,9 @@ namespace server.Controllers
                 role = u.Role
             }), new CookieOptions
             {
-                HttpOnly = false,                    
-                Secure = true,                        
-                SameSite = SameSiteMode.None,         
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
