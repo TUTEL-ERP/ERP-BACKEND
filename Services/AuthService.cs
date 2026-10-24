@@ -31,65 +31,44 @@ namespace server.Services
             var user = await _userRepository.GetByUsernameAsync(request.Username);
 
             if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
-            {
                 throw new UnauthorizedAccessException("Invalid username or password");
-            }
 
             if (!user.IsActive)
-            {
                 throw new UnauthorizedAccessException("Account is deactivated");
-            }
 
             return await GenerateAuthResponse(user);
         }
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
-            // Check if username exists
             if (await _userRepository.UsernameExistsAsync(request.Username))
-            {
                 throw new InvalidOperationException("Username already exists");
-            }
 
-            // Check if email exists
             if (await _userRepository.EmailExistsAsync(request.Email))
-            {
                 throw new InvalidOperationException("Email already exists");
-            }
 
             var user = _mapper.Map<User>(request);
             user.PasswordHash = HashPassword(request.Password);
             user.CreatedAt = DateTime.UtcNow;
             user.IsActive = true;
 
-            // Use AddAsync from GenericRepository (changed from CreateAsync)
             var createdUser = await _userRepository.AddAsync(user);
-
             return await GenerateAuthResponse(createdUser);
         }
 
         public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request)
         {
-            // Validate refresh token
             var isValid = await _refreshTokenRepository.ValidateTokenAsync(request.RefreshToken);
             if (!isValid)
-            {
                 throw new UnauthorizedAccessException("Invalid refresh token");
-            }
 
-            // Get user from refresh token
             var refreshToken = await _refreshTokenRepository.GetByTokenAsync(request.RefreshToken);
             var user = await _userRepository.GetByIdAsync(refreshToken.UserId);
 
             if (user == null || !user.IsActive)
-            {
                 throw new UnauthorizedAccessException("User not found or inactive");
-            }
 
-            // Revoke old refresh token
             await _refreshTokenRepository.RevokeTokenAsync(request.RefreshToken);
-
-            // Generate new tokens
             return await GenerateAuthResponse(user);
         }
 
@@ -110,22 +89,15 @@ namespace server.Services
             return await _refreshTokenRepository.ValidateTokenAsync(refreshToken);
         }
 
-        public string HashPassword(string password)
-        {
-            return BCrypt.Net.BCrypt.HashPassword(password);
-        }
+        public string HashPassword(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 
-        public bool VerifyPassword(string password, string hash)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
-        }
+        public bool VerifyPassword(string password, string hash) => BCrypt.Net.BCrypt.Verify(password, hash);
 
         private async Task<AuthResponse> GenerateAuthResponse(User user)
         {
             var accessToken = _jwtService.GenerateAccessToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken();
 
-            // Save refresh token
             var refreshTokenEntity = new RefreshToken
             {
                 Token = refreshToken,
@@ -135,20 +107,37 @@ namespace server.Services
                 IsRevoked = false
             };
 
-            // Use AddAsync from GenericRepository (changed from CreateAsync)
             await _refreshTokenRepository.AddAsync(refreshTokenEntity);
 
-            // Update user with refresh token
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = refreshTokenEntity.ExpiryDate;
             await _userRepository.UpdateAsync(user);
+
+            // ✅ Create a manual UserDto to ensure ALL fields (including department) are mapped
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role ?? "User",
+                CompanyId = user.CompanyId,
+                BranchId = user.BranchId,
+                DepartmentId = user.DepartmentId
+            };
 
             return new AuthResponse
             {
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 Expiry = DateTime.UtcNow.AddMinutes(15),
-                User = _mapper.Map<UserDto>(user)
+                UserId = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role ?? "User",
+                CompanyId = user.CompanyId,
+                BranchId = user.BranchId,
+                DepartmentId = user.DepartmentId,
+                User = userDto
             };
         }
     }

@@ -6,8 +6,10 @@ namespace server.Interfaces.Services
     public interface IUserSetupService
     {
         Task<DataTable> GetGridDataAsync(string usrname, UserRequestDto request);
-                Task<DataTable> GetRolesAsync(string usrname, UserRequestDto request);   
-
+        Task<DataTable> GetRolesAsync(string usrname, UserRequestDto request);
+        Task<DataTable> GetCompaniesAsync(string usrname, UserRequestDto request);
+        Task<DataTable> GetBranchesAsync(string usrname, UserRequestDto request);
+        Task<DataTable> GetDepartmentsAsync(string usrname, UserRequestDto request);
         Task<DataTable> InsertRecordAsync(string usrname, UserRequestDto request);
         Task<DataTable> UpdateRecordAsync(string usrname, UserRequestDto request);
         Task<DataTable> DeleteRecordAsync(string usrname, UserRequestDto request);

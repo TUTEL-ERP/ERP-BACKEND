@@ -92,8 +92,10 @@ builder.Services.AddScoped<ISaleReturnService, SaleReturnService>();
 builder.Services.AddScoped<IPaymentAdjustmentService, PaymentAdjustmentService>();
 builder.Services.AddScoped<IReceiptAdjustmentService, ReceiptAdjustmentService>();
 builder.Services.AddScoped<IGRNService, GRNService>();
+builder.Services.AddScoped<IDepartmentalRequestService, DepartmentalRequestService>(); 
 
-//=================================
+
+builder.Services.AddScoped<IDepartmentalRequestRepository, DepartmentalRequestRepository>();
 builder.Services.AddScoped<IGRNRepository, GRNRepository>();
 builder.Services.AddScoped<IReceiptAdjustmentRepository, ReceiptAdjustmentRepository>();
 builder.Services.AddScoped<IPaymentAdjustmentRepository, PaymentAdjustmentRepository>();

@@ -41,10 +41,16 @@ namespace server.Dto
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public DateTime Expiry { get; set; }
-        public int UserId { get; set; }
+        public int UserId { get; set; }        
         public string Username { get; set; }
         public string Email { get; set; }
         public string Role { get; set; }
+        
+        // ✅ NEW FIELDS
+        public int? CompanyId { get; set; }
+        public int? BranchId { get; set; }
+        public int? DepartmentId { get; set; }
+
         public UserDto User { get; set; }
     }
 
@@ -54,8 +60,9 @@ namespace server.Dto
         public string Username { get; set; }
         public string Email { get; set; }
         public string Role { get; set; }
-        public int? CompanyId { get; set; }   
-        public int? BranchId { get; set; }     
+        
+        public int? CompanyId { get; set; }
+        public int? BranchId { get; set; }
         public int? DepartmentId { get; set; }
     }
 }

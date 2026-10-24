@@ -18,7 +18,12 @@ namespace server.Services
         }
 
         public Task<DataTable> GetGridDataAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.GRIDDATA, r);
-           public Task<DataTable> GetRolesAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.GET_ROLES, r);
+        public Task<DataTable> GetRolesAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.GET_ROLES, r);
+        
+        public Task<DataTable> GetCompaniesAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.GET_COMPANIES, r);
+        public Task<DataTable> GetBranchesAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.GET_BRANCHES, r);
+        public Task<DataTable> GetDepartmentsAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.GET_DEPARTMENTS, r);
+
         public Task<DataTable> InsertRecordAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.INSERT, r);
         public Task<DataTable> UpdateRecordAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.UPDATE, r);
         public Task<DataTable> DeleteRecordAsync(string u, UserRequestDto r) => _repo.ExecuteProcedureAsync(u, UserAction.DELETE, r);

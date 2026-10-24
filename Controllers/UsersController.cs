@@ -211,61 +211,37 @@ namespace server.Controllers
                 return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
             }
         }
-        [HttpGet("companies")]
+               [HttpGet("companies")]
         public async Task<IActionResult> GetCompanies()
         {
-            try
-            {
-                var userid = GetUserId();
-                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+            var userid = GetUserId();
+            if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
-                var request = new CompanyRequestDto { data = JsonDocument.Parse("{}").RootElement };
-                var dt = await _companyService.GetGridDataAsync(userid, request);
-                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Companies retrieved"));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting companies");
-                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
-            }
+            var request = new UserRequestDto { formId = "User", data = JsonDocument.Parse("{}").RootElement };
+            var dt = await _service.GetCompaniesAsync(userid, request);
+            return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Companies retrieved"));
         }
 
         [HttpGet("branches")]
         public async Task<IActionResult> GetBranches()
         {
-            try
-            {
-                var userid = GetUserId();
-                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+            var userid = GetUserId();
+            if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
-                var request = new BranchRequestDto { data = JsonDocument.Parse("{}").RootElement };
-                var dt = await _branchService.GetGridDataAsync(userid, request);
-                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Branches retrieved"));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting branches");
-                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
-            }
+            var request = new UserRequestDto { formId = "User", data = JsonDocument.Parse("{}").RootElement };
+            var dt = await _service.GetBranchesAsync(userid, request);
+            return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Branches retrieved"));
         }
 
         [HttpGet("departments")]
         public async Task<IActionResult> GetDepartments()
         {
-            try
-            {
-                var userid = GetUserId();
-                if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
+            var userid = GetUserId();
+            if (string.IsNullOrEmpty(userid)) return Ok(ApiResponseHelper.Fail("userid not found"));
 
-                var request = new DepartmentRequestDto { data = JsonDocument.Parse("{}").RootElement };
-                var dt = await _deptService.GetGridDataAsync(userid, request);
-                return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Departments retrieved"));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting departments");
-                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
-            }
+            var request = new UserRequestDto { formId = "User", data = JsonDocument.Parse("{}").RootElement };
+            var dt = await _service.GetDepartmentsAsync(userid, request);
+            return Ok(ApiResponseHelper.Sucess(DataTableHelper.ToDynamicList(dt), "Departments retrieved"));
         }
     }
 }
