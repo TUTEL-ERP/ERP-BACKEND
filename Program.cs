@@ -94,6 +94,8 @@ builder.Services.AddScoped<IReceiptAdjustmentService, ReceiptAdjustmentService>(
 builder.Services.AddScoped<IGRNService, GRNService>();
 builder.Services.AddScoped<IDepartmentalRequestService, DepartmentalRequestService>(); 
 builder.Services.AddScoped<IDepartmentalReturnService, DepartmentalReturnService>();
+builder.Services.AddScoped<IDepartmentalIssueRepository, DepartmentalIssueRepository>();
+builder.Services.AddScoped<IDepartmentalIssueService, DepartmentalIssueService>();
 
 
 builder.Services.AddScoped<IDepartmentalRequestRepository, DepartmentalRequestRepository>();
