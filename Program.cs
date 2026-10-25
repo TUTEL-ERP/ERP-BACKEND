@@ -96,6 +96,8 @@ builder.Services.AddScoped<IDepartmentalRequestService, DepartmentalRequestServi
 builder.Services.AddScoped<IDepartmentalReturnService, DepartmentalReturnService>();
 builder.Services.AddScoped<IDepartmentalIssueRepository, DepartmentalIssueRepository>();
 builder.Services.AddScoped<IDepartmentalIssueService, DepartmentalIssueService>();
+builder.Services.AddScoped<IDepartmentalConsumptionRepository, DepartmentalConsumptionRepository>();
+builder.Services.AddScoped<IDepartmentalConsumptionService, DepartmentalConsumptionService>();
 
 
 builder.Services.AddScoped<IDepartmentalRequestRepository, DepartmentalRequestRepository>();
