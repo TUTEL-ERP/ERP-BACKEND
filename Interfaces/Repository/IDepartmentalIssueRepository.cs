@@ -10,5 +10,6 @@ namespace server.Interfaces.Repository
             string usrname,
             DepartmentalIssueAction action,
             DepartmentalIssueDto request);
+        Task<DataSet> GetItemBatchesAsync(string usrname, DepartmentalIssueDto request);
     }
 }

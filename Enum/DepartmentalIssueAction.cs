@@ -9,6 +9,7 @@ namespace server.Enums
         GET_NEXT_NO,
         GET_APPROVED_DRS,
         GET_DR_ITEMS,
+        GET_ITEM_BATCHES,
         INSERT,
         UPDATE,
         APPROVE,

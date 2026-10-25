@@ -55,6 +55,16 @@ namespace server.Services
             FirstTable(await _repository.ExecuteProcedureAsync(
                 usrname, DepartmentalIssueAction.GET_DR_ITEMS, request));
 
+        public async Task<string> GetItemBatchesAsync(string usrname, DepartmentalIssueDto request)
+        {
+            var dataSet = await _repository.GetItemBatchesAsync(usrname, request);
+            var result = FirstTable(dataSet);
+            if (result.Rows.Count == 0)
+                return string.Empty;
+
+            return result.Rows[0][0]?.ToString() ?? string.Empty;
+        }
+
         public async Task<DataTable> ApproveAsync(string usrname, DepartmentalIssueDto request) =>
             FirstTable(await _repository.ExecuteProcedureAsync(usrname, DepartmentalIssueAction.APPROVE, request));
 

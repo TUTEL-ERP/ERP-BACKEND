@@ -57,5 +57,8 @@ namespace server.Repository
             dataSet.Load(reader, LoadOption.PreserveChanges, "Master", "Lines");
             return dataSet;
         }
+
+        public Task<DataSet> GetItemBatchesAsync(string usrname, DepartmentalIssueDto request) =>
+            ExecuteProcedureAsync(usrname, DepartmentalIssueAction.GET_ITEM_BATCHES, request);
     }
 }

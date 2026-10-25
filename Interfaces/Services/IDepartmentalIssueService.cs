@@ -15,6 +15,7 @@ namespace server.Interfaces.Services
         Task<string> GetNextNoAsync(string usrname, DepartmentalIssueDto request);
         Task<DataTable> GetApprovedDRsAsync(string usrname, DepartmentalIssueDto request);
         Task<DataTable> GetDRItemsAsync(string usrname, DepartmentalIssueDto request);
+        Task<string> GetItemBatchesAsync(string usrname, DepartmentalIssueDto request);
         Task<DataTable> ApproveAsync(string usrname, DepartmentalIssueDto request);
         Task<DataTable> RejectAsync(string usrname, DepartmentalIssueDto request);
     }

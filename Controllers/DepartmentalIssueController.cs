@@ -184,6 +184,32 @@ namespace server.Controllers
             }
         }
 
+        [HttpGet("item-batches/{itemId:int}")]
+        public async Task<IActionResult> GetItemBatches(int itemId)
+        {
+            try
+            {
+                var userId = GetUserId();
+                if (string.IsNullOrWhiteSpace(userId))
+                    return Unauthorized(ApiResponseHelper.Fail("userid not found"));
+
+                var request = new DepartmentalIssueDto
+                {
+                    data = JsonDocument.Parse(JsonSerializer.Serialize(new { itemId })).RootElement
+                };
+                var batches = await _service.GetItemBatchesAsync(userId, request);
+                using var batchesDocument = JsonDocument.Parse(batches);
+                return Ok(ApiResponseHelper.Sucess(
+                    batchesDocument.RootElement.Clone(),
+                    "Item batches retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting batches for item {ItemId}", itemId);
+                return StatusCode(500, ApiResponseHelper.Fail("An error occurred"));
+            }
+        }
+
         [HttpPost("insertRecord")]
         public async Task<IActionResult> InsertRecord([FromBody] DepartmentalIssueDto request)
         {
