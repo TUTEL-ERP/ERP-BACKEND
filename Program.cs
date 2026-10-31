@@ -87,6 +87,7 @@ builder.Services.AddScoped<IChartOfAccountsService, ChartOfAccountsService>();
 builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ISaleReturnService, SaleReturnService>();
 builder.Services.AddScoped<IPaymentAdjustmentService, PaymentAdjustmentService>();
